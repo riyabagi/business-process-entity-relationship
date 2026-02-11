@@ -30,7 +30,7 @@ export default function Navbar() {
           {[
             { name: "Overview", path: "/" },
             { name: "Impact Explorer", path: "/impact" },
-            { name: "Assurance Score", path: "/overview" },
+            { name: "Assurance Score", path: "/assurance" },
             // { name: "Live", path: "/live" },
           ].map((item, index) => (
             <Link

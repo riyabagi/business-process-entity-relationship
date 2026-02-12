@@ -1,0 +1,110 @@
+.title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+ 
+.subtitle {
+  color: #6b7280;
+  margin-bottom: 20px;
+}
+ 
+/* OUTER CARD */
+.outer-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 14px 16px;
+  min-height: 210px;      /* 👈 KEY: smaller height */
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+}
+ 
+.outer-card.active {
+  border: 2px solid #8b5cf6;
+}
+ 
+/* CARD HEADERS */
+.outer-card h5 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+ 
+/* SMALL TEXT */
+.muted {
+  color: #6b7280;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+ 
+/* WAITING STATE */
+.waiting {
+  font-size: 13px;
+  color: #9ca3af;
+  font-style: italic;
+  margin-top: 30px;
+  text-align: center;
+}
+ 
+/* INNER CARDS (items) */
+.inner-card {
+  display: flex;
+  align-items: center;
+  background: #f9fafb;
+  border-radius: 10px;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+}
+ 
+/* LEFT STRIP */
+.left-strip {
+  width: 4px;
+  height: 28px;
+  background: #8b5cf6;
+  border-radius: 4px;
+  margin-right: 8px;
+}
+ 
+/* TEXT */
+.card-title {
+  font-size: 13px;
+  font-weight: 500;
+}
+ 
+/* CRITICAL BADGE */
+.warning.critical {
+  font-size: 11px;
+  color: #dc2626;
+  font-weight: 600;
+  margin-top: 2px;
+}
+ 
+/* SUMMARY CARDS */
+.summary-card,
+.criticality-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+ 
+.card-label {
+  font-size: 12px;
+  color: #6b7280;
+}
+ 
+.card-value,
+.crit-value {
+  font-size: 22px;
+  font-weight: 700;
+}
+.severity-card,
+.summary-card,
+.criticality-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+}
+.container-fluid {
+  padding-bottom: 40px;
+}

@@ -6,6 +6,11 @@ PASSWORD = "neo4j123"
 
 driver = GraphDatabase.driver(URI, auth=(USER, PASSWORD))
 
+def run_query(query, params=None):
+    with driver.session() as session:
+        result = session.run(query, params or {})
+        return result.data()
+
 # ----------------------------
 # Get unique servers
 # ----------------------------

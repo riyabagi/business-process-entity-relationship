@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+from db.neo4j import run_query
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 csv_path = os.path.join(BASE_DIR, "..", "data", "impact_data.csv")

@@ -1,7 +1,10 @@
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
+import { useState } from "react";
 import logo from "../assets/logo.png";
 
 export default function Navbar() {
+  const [expanded, setExpanded] = useState(false);
+
   return (
     <nav
       className="navbar navbar-expand-lg shadow-sm"
@@ -11,50 +14,62 @@ export default function Navbar() {
       }}
     >
       <div className="container-fluid">
-        {/* Brand */}
-         {/* Logo */}
-        <span className="navbar-brand fw-bold d-flex align-items-center">
+
+        {/* Logo */}
+        <span className="navbar-brand d-flex align-items-center">
           <img
             src={logo}
             alt="HSBC Logo"
-            className="navbar-logo"
-           style={{
-            height: "50px",
-            width: "auto",
-            objectFit: "contain"
-          }}  />
+            style={{
+              height: "50px",
+              width: "auto",
+              objectFit: "contain",
+            }}
+          />
         </span>
 
-        {/* Links */}
-        <div className="navbar-nav ms-auto gap-3">
-          {[
-            { name: "Overview", path: "/" },
-            { name: "Impact Explorer", path: "/impact" },
-            { name: "Assurance Score", path: "/assurance" },
-            // { name: "Live", path: "/live" },
-          ].map((item, index) => (
-            <Link
-              key={index}
-              className="nav-link fw-medium"
-              to={item.path}
-              style={{
-                color: "#1565c0",
-                borderRadius: "8px",
-                padding: "6px 12px",
-                transition: "all 0.2s ease-in-out",
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = "#bbdefb";
-                e.target.style.color = "#0d47a1";
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = "transparent";
-                e.target.style.color = "#1565c0";
-              }}
-            >
-              {item.name}
-            </Link>
-          ))}
+        {/* Hamburger Button */}
+        <button
+          className="navbar-toggler"
+          type="button"
+          onClick={() => setExpanded(!expanded)}
+        >
+          <span className="navbar-toggler-icon"></span>
+        </button>
+
+        {/* Collapsible Links */}
+        <div
+          className={`collapse navbar-collapse ${
+            expanded ? "show" : ""
+          }`}
+        >
+          <div className="navbar-nav ms-auto gap-lg-3 gap-2 mt-3 mt-lg-0">
+
+            {[
+              { name: "Overview", path: "/" },
+              { name: "Impact Explorer", path: "/impact" },
+              { name: "Assurance Score", path: "/assurance" },
+            ].map((item, index) => (
+              <NavLink
+                key={index}
+                to={item.path}
+                end={item.path === "/"}
+                className="nav-link fw-medium text-center"
+                onClick={() => setExpanded(false)} // close menu after click
+                style={({ isActive }) => ({
+                  color: isActive ? "#0d47a1" : "#1565c0",
+                  backgroundColor: isActive ? "#bbdefb" : "transparent",
+                  borderRadius: "15px",
+                  padding: "8px 14px",
+                  fontWeight: isActive ? "bold" : "500",
+                  transition: "all 0.2s ease-in-out",
+                })}
+              >
+                {item.name}
+              </NavLink>
+            ))}
+
+          </div>
         </div>
       </div>
     </nav>

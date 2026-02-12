@@ -1,25 +1,46 @@
 from neo4j import GraphDatabase
 
-driver = GraphDatabase.driver(
-    "bolt://localhost:7687",
-    auth=("neo4j", "neo4j123")
-)
+URI = "bolt://localhost:7687"
+USER = "neo4j"
+PASSWORD = "neo4j123"
 
+driver = GraphDatabase.driver(URI, auth=(USER, PASSWORD))
+
+# ----------------------------
+# Get unique servers
+# ----------------------------
 def get_servers():
-    with driver.session() as session:
-        result = session.run(
-            "MATCH (s:Server) RETURN s.name AS name"
-        )
-        return [r["name"] for r in result]
+    try:
+        with driver.session() as session:
+            result = session.run("""
+                MATCH (s:Server)
+                RETURN DISTINCT s.name AS name
+                ORDER BY name
+            """)
 
+            servers = [record["name"] for record in result]
+
+            print("Servers from Neo4j:", servers)  # debug print
+
+            return servers
+
+    except Exception as e:
+        print("Neo4j ERROR:", str(e))
+        return []
+
+# ----------------------------
+# Get impact chain
+# ----------------------------
 def get_impact(server):
     with driver.session() as session:
         result = session.run(
             """
-            MATCH (s:Server {name:$server})-[:HAS_IMPACT]->(i:Impact)
-            RETURN i.application AS application,
-                   i.process AS process,
-                   i.service AS service
+            MATCH (s:Server {name:$server})-[:RUNS]->(a:Application)
+                  -[:SUPPORTS]->(p:Process)
+                  -[:DELIVERS]->(sv:Service)
+            RETURN a.name AS application,
+                   p.name AS process,
+                   sv.name AS service
             """,
             server=server
         )

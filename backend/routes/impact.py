@@ -1,7 +1,7 @@
 from fastapi import APIRouter
-from db.neo4j import get_servers, get_impact
+from app.impact_service import get_servers, get_impact
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
 
 @router.get("/servers")
 def servers():

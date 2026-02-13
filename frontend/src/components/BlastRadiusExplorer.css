@@ -89,3 +89,111 @@
     max-height: 200px;
     overflow-y: auto;
 }
+
+/* ===============================
+   AI Incident Summary UI
+=============================== */
+
+.ai-summary-card {
+  background: #f9fafb;
+  border-radius: 14px;
+  padding: 22px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+}
+
+/* Header */
+
+.ai-summary-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.ai-summary-icon {
+  font-size: 1.6rem;
+}
+
+.ai-badge {
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 0.75rem;
+  padding: 5px 10px;
+  border-radius: 999px;
+}
+
+/* Sections */
+
+.ai-section {
+  padding: 14px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.ai-section strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* Different colors for readability */
+
+.ai-affected {
+  background: #eff6ff;
+  border-left: 4px solid #3b82f6;
+}
+
+.ai-impact {
+  background: #fef3c7;
+  border-left: 4px solid #f59e0b;
+}
+
+.ai-team {
+  background: #ecfdf5;
+  border-left: 4px solid #10b981;
+}
+
+.ai-time {
+  background: #f5f3ff;
+  border-left: 4px solid #8b5cf6;
+}
+
+.ai-reassurance {
+  background: #fdf2f8;
+  border-left: 4px solid #ec4899;
+}
+/* AI Section Content */
+.ai-section p {
+  margin: 0.5rem 0 0 0;
+  color: #333;
+  line-height: 1.5;
+}
+
+/* Loading Animation */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ai-loading {
+  animation: spin 2s linear infinite;
+}
+
+/* Badge Animation */
+.ai-badge {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}

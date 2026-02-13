@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { getServers, getImpact } from "../api";
+import React, { useEffect, useState, useMemo } from "react";
+import { getServers, getImpact, getAISummary } from "../api";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./BlastRadiusExplorer.css";
 
@@ -9,7 +9,9 @@ export default function BlastRadiusExplorer() {
   const [serverInfo, setServerInfo] = useState(null);
   const [impact, setImpact] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
   const [error, setError] = useState("");
+  const [summary, setSummary] = useState("");
 
   // Static metadata for servers (IP, location, and type)
   const SERVER_METADATA = {
@@ -73,10 +75,19 @@ export default function BlastRadiusExplorer() {
     }
   };
 
-  // Extract unique values
-  const apps = [...new Set(impact.map(i => i.application).filter(Boolean))];
-  const processes = [...new Set(impact.map(i => i.process).filter(Boolean))];
-  const services = [...new Set(impact.map(i => i.service).filter(Boolean))];
+  // Extract unique values - memoized to prevent unnecessary re-renders
+  const apps = useMemo(
+    () => [...new Set(impact.map(i => i.application).filter(Boolean))],
+    [impact]
+  );
+  const processes = useMemo(
+    () => [...new Set(impact.map(i => i.process).filter(Boolean))],
+    [impact]
+  );
+  const services = useMemo(
+    () => [...new Set(impact.map(i => i.service).filter(Boolean))],
+    [impact]
+  );
 
   // All values (including duplicates) — kept for debugging but UI will show unique lists
   const appsAll = impact.map(i => i.application).filter(Boolean);
@@ -87,6 +98,25 @@ export default function BlastRadiusExplorer() {
   useEffect(() => {
     console.log("Unique counts -> apps:", apps.length, "processes:", processes.length, "services:", services.length);
   }, [impact]);
+
+  // Fetch AI summary when impact data changes
+  useEffect(() => {
+    if (selectedServer && impact.length > 0) {
+      console.log("Triggering AI fetch for:", selectedServer, "Apps:", apps, "Processes:", processes);
+      setAiLoading(true);
+      getAISummary(selectedServer, apps, processes)
+        .then(data => {
+          console.log("AI Summary received:", data.summary);
+          setSummary(data.summary);
+          setAiLoading(false);
+        })
+        .catch(err => {
+          console.error("Failed to fetch AI summary:", err);
+          setSummary("Unable to generate incident summary at this time.");
+          setAiLoading(false);
+        });
+    }
+  }, [selectedServer, impact]);
 
   // Dynamic scaling for bar chart
   const maxValue = Math.max(apps.length, processes.length, services.length, 1);
@@ -130,6 +160,41 @@ export default function BlastRadiusExplorer() {
   };
 
   const impactResult = computeImpact();
+  
+  const formatSummary = (text) => {
+    if (!text) return {};
+
+    // Log full response for debugging
+    console.log("Raw AI Response:", text);
+
+    const sections = {
+      affected: "",
+      impact: "",
+      team: "",
+      time: "",
+      reassurance: ""
+    };
+
+    // Split by section headers and capture content after each header
+    const affectedMatch = text.match(/Affected Systems[:\s]+([\s\S]*?)(?=Business Impact|$)/i);
+    const impactMatch = text.match(/Business Impact[:\s]+([\s\S]*?)(?=Responsible Team|$)/i);
+    const teamMatch = text.match(/Responsible Team[:\s]+([\s\S]*?)(?=Estimated Resolution|$)/i);
+    const timeMatch = text.match(/Estimated Resolution[:\s]+([\s\S]*?)(?=Reassurance|$)/i);
+    const reassuranceMatch = text.match(/Reassurance[:\s]+([\s\S]*?)$/i);
+
+    sections.affected = affectedMatch ? affectedMatch[1].trim() : "Processing...";
+    sections.impact = impactMatch ? impactMatch[1].trim() : "Processing...";
+    sections.team = teamMatch ? teamMatch[1].trim() : "Processing...";
+    sections.time = timeMatch ? timeMatch[1].trim() : "Processing...";
+    sections.reassurance = reassuranceMatch ? reassuranceMatch[1].trim() : "Processing...";
+
+    // Log parsed sections for debugging
+    console.log("Parsed Sections:", sections);
+
+    return sections;
+  };
+
+  const formatted = formatSummary(summary);
 
   return (
     <div className="container-fluid py-3">
@@ -319,7 +384,60 @@ export default function BlastRadiusExplorer() {
             </ul>
           </div>
         </div>
+      </div>
+      <div className="row mt-4">
+        <div className="col-md-12">
+          <div className="ai-summary-card">
 
+            <div className="ai-summary-header">
+              <span className="ai-summary-icon">🤖</span>
+              <h5 className="fw-bold mb-0">AI Incident Summary</h5>
+              <span className="ai-badge">{aiLoading ? "🔄 Generating..." : "✓ Auto Generated"}</span>
+            </div>
+
+            {aiLoading && (
+              <div style={{ textAlign: "center", padding: "2rem", color: "#666" }}>
+                <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>⏳</div>
+                <p>Analyzing incident data with AI...</p>
+                <p style={{ fontSize: "0.9rem", fontStyle: "italic" }}>This usually takes 5-15 seconds</p>
+              </div>
+            )}
+
+            {!aiLoading && summary && (
+              <>
+                <div className="ai-section ai-affected">
+                  <strong>🖥 Affected Systems</strong>
+                  <p>{formatted.affected || "—"}</p>
+                </div>
+
+                <div className="ai-section ai-impact">
+                  <strong>⚠ Business Impact</strong>
+                  <p>{formatted.impact || "—"}</p>
+                </div>
+
+                <div className="ai-section ai-team">
+                  <strong>👨‍💻 Responsible Team</strong>
+                  <p>{formatted.team || "—"}</p>
+                </div>
+
+                <div className="ai-section ai-time">
+                  <strong>⏱ Estimated Resolution</strong>
+                  <p>{formatted.time || "—"}</p>
+                </div>
+
+                <div className="ai-section ai-reassurance">
+                  <strong>💬 Reassurance</strong>
+                  <p>{formatted.reassurance || "—"}</p>
+                </div>
+              </>
+            )}
+
+            {!aiLoading && !summary && (
+              <p style={{ color: "#999", padding: "1rem" }}>Select a server and click "Simulate Impact" to generate an incident summary.</p>
+            )}
+
+          </div>
+        </div>
       </div>
     </div>
   );

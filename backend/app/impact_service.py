@@ -8,3 +8,11 @@ def get_servers():
 
 def get_impact(server_name):
     return db_get_impact(server_name)
+
+def get_disturbed_entities():
+    # Replace with real Neo4j query
+    return {
+        "servers": ["Core Banking Server"],
+        "applications": ["Transaction System"],
+        "processes": ["Payment Processing"]
+    }

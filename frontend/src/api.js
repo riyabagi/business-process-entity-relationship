@@ -11,3 +11,10 @@ export const getImpact = async (server) => {
   const res = await axios.get(`${API}/impact/${server}`);
   return res.data;
 };
+
+export const getAssurance = async (asset) => {
+  const res = await axios.get(`${API}/assurance-score`, {
+    params: { asset }
+  });
+  return res.data;
+};

@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.impact_service import get_impact
-from routes.impact import router
+from routes.impact import router as impact_router
+from routes.assurance import router as assurance_router
 
 app = FastAPI()
 
@@ -12,7 +13,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(router)
+app.include_router(impact_router)
+app.include_router(assurance_router)
 
 @app.get("/impact/{server}")
 def impact(server: str):

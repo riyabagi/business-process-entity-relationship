@@ -49,6 +49,7 @@ export default function Navbar() {
               { name: "Overview", path: "/" },
               { name: "Impact Explorer", path: "/impact" },
               { name: "Assurance Score", path: "/assurance" },
+               { name: "Live Scenario", path: "/live" }, 
             ].map((item, index) => (
               <NavLink
                 key={index}

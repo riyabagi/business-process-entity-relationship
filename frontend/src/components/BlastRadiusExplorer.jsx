@@ -2,41 +2,160 @@ import React, { useEffect, useState } from "react";
 import { getServers, getImpact } from "../api";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./BlastRadiusExplorer.css";
- 
+
 export default function BlastRadiusExplorer() {
   const [servers, setServers] = useState([]);
   const [selectedServer, setSelectedServer] = useState("");
+  const [serverInfo, setServerInfo] = useState(null);
   const [impact, setImpact] = useState([]);
- 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // Static metadata for servers (IP, location, and type)
+  const SERVER_METADATA = {
+    "Core Banking Cluster": {
+      ip: "10.0.1.10",
+      location: "London DC",
+      type: ["corebanking", "application"]
+    },
+    "Payments Gateway Node": {
+      ip: "10.0.2.21",
+      location: "London Edge",
+      type: ["network", "application"]
+    },
+    "Customer Data Platform": {
+      ip: "10.0.3.33",
+      location: "Cloud - Azure UK South",
+      type: ["cloud", "application", "db"]
+    },
+    "Risk Management Server": {
+      ip: "10.0.4.44",
+      location: "London DC - Secondary",
+      type: ["application", "process"]
+    }
+  };
+
+  // Load servers from backend
   useEffect(() => {
-    getServers().then(setServers);
+    getServers()
+      .then((data) => {
+        setServers(data);
+        console.log("Servers loaded from backend:", data);
+      })
+      .catch(() => setError("Failed to load servers from backend."));
   }, []);
- 
+
+  // Fetch impact data
   const handleCheck = async () => {
     if (!selectedServer) return;
-    const data = await getImpact(selectedServer);
-    setImpact(data);
+
+    try {
+      setLoading(true);
+      setError("");
+
+      const data = await getImpact(selectedServer);
+
+      console.log("Impact data fetched from backend for server", selectedServer, ":", data);
+
+      if (!data || data.length === 0) {
+        setImpact([]);
+        setError("No impact data found from backend.");
+        return;
+      }
+
+      setImpact(data);
+      // set server info from local mapping (fallback null)
+      setServerInfo(SERVER_METADATA[selectedServer] || null);
+    } catch (err) {
+      setError("Failed to fetch impact from backend.");
+    } finally {
+      setLoading(false);
+    }
   };
- 
-  const apps = [...new Set(impact.map(i => i.application))];
-  const processes = [...new Set(impact.map(i => i.process))];
-  const services = [...new Set(impact.map(i => i.service))];
- 
+
+  // Extract unique values
+  const apps = [...new Set(impact.map(i => i.application).filter(Boolean))];
+  const processes = [...new Set(impact.map(i => i.process).filter(Boolean))];
+  const services = [...new Set(impact.map(i => i.service).filter(Boolean))];
+
+  // All values (including duplicates) — kept for debugging but UI will show unique lists
+  const appsAll = impact.map(i => i.application).filter(Boolean);
+  const processesAll = impact.map(i => i.process).filter(Boolean);
+  const servicesAll = impact.map(i => i.service).filter(Boolean);
+
+  // Debug: log counts to help determine whether data or UI limits items
+  useEffect(() => {
+    console.log("Unique counts -> apps:", apps.length, "processes:", processes.length, "services:", services.length);
+  }, [impact]);
+
+  // Dynamic scaling for bar chart
+  const maxValue = Math.max(apps.length, processes.length, services.length, 1);
+
+  // Compute impact level with simple weighted rules
+  const computeImpact = () => {
+    const a = apps.length;
+    const p = processes.length;
+    const s = services.length;
+
+    // Score weights: services (4), applications (2), processes (1)
+    const score = s * 4 + a * 2 + p * 1;
+
+    if (score >= 20 || (s >= 3 && a >= 4)) {
+      return { level: "CRITICAL", color: "danger", reasons: [
+        `High service impact (${s} services)`,
+        `Multiple applications affected (${a})`,
+        `Many processes touched (${p})`
+      ] };
+    }
+
+    if (score >= 12 || (s === 2 && a >= 4) || (a >= 5)) {
+      return { level: "HIGH", color: "warning", reasons: [
+        `Multiple services affected (${s})`,
+        `Several applications impacted (${a})`,
+      ] };
+    }
+
+    if (score >= 6 || (a >= 3 && p >= 3)) {
+      return { level: "MEDIUM", color: "info", reasons: [
+        `Moderate application impact (${a})`,
+        `Some processes involved (${p})`,
+      ] };
+    }
+
+    if (score > 0) {
+      return { level: "LOW", color: "secondary", reasons: [`Limited impact: apps=${a}, processes=${p}, services=${s}`] };
+    }
+
+    return { level: "SAFE", color: "success", reasons: ["No services impacted"] };
+  };
+
+  const impactResult = computeImpact();
+
   return (
-    <div className="container-fluid">
- 
-    <h2 className="mb-2">Business Impact Explorer</h2>
+    <div className="container-fluid py-3">
+      <h2 className="mb-2">Business Impact Explorer</h2>
       <p className="text-muted">
         Select an infrastructure asset to trace its dependencies.
       </p>
- 
+
+      {/* Loading & Error */}
+      {loading && <p className="text-primary">Loading impact data...</p>}
+      {error && <p className="text-danger">{error}</p>}
+
+      {/* Debug panel: raw impact data from backend */}
+      {/* {impact && impact.length > 0 && (
+        <details className="mt-2">
+          <summary>Raw impact data ({impact.length} rows) — expand to inspect</summary>
+          <pre style={{maxHeight: 200, overflow: 'auto'}}>{JSON.stringify(impact, null, 2)}</pre>
+        </details>
+      )} */}
+
+      {/* Dependency Boxes */}
       <div className="row g-3 align-items-stretch">
- 
         {/* Infrastructure */}
         <div className="col-md-3">
           <div className="card p-3 shadow-sm h-100">
             <h5>1 Infrastructure</h5>
- 
             <select
               className="form-select my-2"
               value={selectedServer}
@@ -44,91 +163,164 @@ export default function BlastRadiusExplorer() {
             >
               <option value="">Select Server</option>
               {servers.map((s, i) => (
-                <option key={i} value={s}>{s}</option>
+                <option key={i} value={s}>
+                  {s}
+                </option>
               ))}
             </select>
- 
+
             <button
-              className="btn btn-primary mt-auto"
+              className="btn btn-primary"
               onClick={handleCheck}
             >
               Simulate Impact
             </button>
+            {serverInfo && (
+              <div className="mt-2">
+                <small className="text-muted">IP:</small> <span className="me-2">{serverInfo.ip}</span>
+                <br />
+                <small className="text-muted">Location:</small> <span className="me-2">{serverInfo.location}</span>
+                <br />
+                <small className="text-muted">Type:</small>
+                {serverInfo.type.map((t, idx) => (
+                  <span key={idx} className="badge bg-secondary ms-2 text-white">{t}</span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
- 
+
         {/* Applications */}
         <div className="col-md-3">
           <div className="card p-3 shadow-sm border-danger h-100">
             <h5>2 Applications</h5>
-            {apps.map((a, i) => (
-              <div key={i} className="alert alert-danger p-2 my-1">
-                {a}
-              </div>
-            ))}
+            <div style={{ maxHeight: "200px", overflowY: "auto" }}>
+              {apps.length === 0 && <p className="text-muted">No data</p>}
+              {apps.map((a, i) => (
+                <div key={i} className="alert alert-danger p-2 my-1">
+                  {a}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
- 
+
         {/* Processes */}
         <div className="col-md-3">
           <div className="card p-3 shadow-sm border-primary h-100">
             <h5>3 Processes</h5>
-            {processes.map((p, i) => (
-              <div key={i} className="alert alert-primary p-2 my-1">
-                {p}
-              </div>
-            ))}
+            <div className="scrollable-list">
+              {processes.length === 0 && <p className="text-muted">No data</p>}
+              {processes.map((p, i) => (
+                <div key={i} className="alert alert-primary p-2 my-1">
+                  {p}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
- 
-        {/* Services */}
+
+        {/* Business Services */}
         <div className="col-md-3">
           <div className="card p-3 shadow-sm border-warning h-100">
             <h5>4 Business Services</h5>
-            {services.map((s, i) => (
-              <div key={i} className="alert alert-warning p-2 my-1">
-                {s}
-              </div>
-            ))}
-          </div>
-        </div>
- 
-      </div>
- 
-      {/* Summary */}
-      <div className="row mt-4 ">
- 
-        <div className="col-md-6 ">
-          <div className="card p-3 shadow-sm bg-danger-subtle ">
-            <h5>Estimated Impact Severity</h5>
-            <div className="graph-placeholder">
-               {/* Place your Chart Component here */}
-               <div className="border-bottom border-start h-100 d-flex align-items-end justify-content-around p-2 text-muted">
-                  <small>Applications</small>
-                  <small>Processes</small>
-                  <small>Biz Services</small>
-               </div>
+            <div style={{ maxHeight: "200px", overflowY: "auto" }}>
+              {services.length === 0 && <p className="text-muted">No data</p>}
+              {services.map((s, i) => (
+                <div key={i} className="alert alert-warning p-2 my-1">
+                  {s}
+                </div>
+              ))}
             </div>
-           
-         
           </div>
         </div>
- 
-        <div className="col-md-6 d-flex flex-column gap-3 ">
-          <div className="card p-3 shadow-sm bg-warning-subtle border-0  ">
-          <h6 className="text-danger fw-bold text-uppercase small">Impacted Services</h6>
-            <h3 className="fw-bold">{services.length} Services</h3>
-            <p className="mb-0 text-danger">Potentially impacted by this asset failure.</p>
-           
-          </div>
-          <div className="card p-3 shadow-sm bg-warning-subtle border-0">
-            <h6 className="text-warning-emphasis fw-bold text-uppercase small">Impact Level</h6>
-            <h3 className="fw-bold">None</h3>
-          </div>
-        </div>
- 
       </div>
- 
+
+      {/* Summary & Graph */}
+      <div className="row mt-4">
+        <div className="col-md-6">
+          <div className="card p-3 shadow-sm h-100">
+            <h5 className="fw-bold mb-4">Estimated Impact Severity</h5>
+
+            <div className="graph-container-v">
+              <div className="y-axis">
+                <span>{maxValue}</span>
+                <span>{Math.ceil(maxValue / 2)}</span>
+                <span>1</span>
+                <span>0</span>
+              </div>
+
+              <div className="bars-wrapper border-bottom border-start">
+                <div className="bar-column">
+                  <div
+                    className="bar-v bar-gray"
+                    style={{
+                      height: `${(apps.length / maxValue) * 100}%`,
+                    }}
+                  ></div>
+                  <small className="mt-2">Applications</small>
+                </div>
+
+                <div className="bar-column">
+                  <div
+                    className="bar-v bar-blue"
+                    style={{
+                      height: `${(processes.length / maxValue) * 100}%`,
+                    }}
+                  ></div>
+                  <small className="mt-2">Processes</small>
+                </div>
+
+                <div className="bar-column">
+                  <div
+                    className="bar-v bar-red"
+                    style={{
+                      height: `${(services.length / maxValue) * 100}%`,
+                    }}
+                  ></div>
+                  <small className="mt-2">Biz Services</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Summary Cards */}
+        <div className="col-md-6 d-flex flex-column gap-3">
+
+          {/* Impacted Services Card */}
+          <div
+            className="card p-3 shadow-sm border-0"
+            style={{ backgroundColor: "#ede9fe" }}
+          >
+            <h6 className="fw-bold text-uppercase small">Impacted Services</h6>
+            <h3 className="fw-bold">{services.length} Services</h3>
+            <p className="mb-0">
+              Potentially impacted by this asset failure.
+            </p>
+          </div>
+
+          {/* Impact Level Card */}
+          <div
+            className="card p-3 shadow-sm border-0"
+            style={{ backgroundColor: "#dcfce7" }}
+          >
+            <h6 className="fw-bold text-uppercase small">Impact Level</h6>
+            <h3 className={`fw-bold text-${impactResult.color}`}>
+              {impactResult.level}
+            </h3>
+
+            <ul className="mb-0 mt-2" style={{ paddingLeft: "1rem" }}>
+              {impactResult.reasons.map((r, idx) => (
+                <li key={idx} style={{ fontSize: "0.9rem" }}>
+                  {r}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }

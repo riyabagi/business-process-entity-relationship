@@ -2,6 +2,11 @@ import pandas as pd
 import os
 from db.neo4j import run_query
 
+# Delete all existing data
+delete_query = "MATCH (n) DETACH DELETE n"
+run_query(delete_query)
+print("🗑️ All existing data deleted from Neo4j")
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 csv_path = os.path.join(BASE_DIR, "..", "data", "impact_data.csv")
 

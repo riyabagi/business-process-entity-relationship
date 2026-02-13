@@ -10,7 +10,7 @@ export default function Navbar() {
       className="navbar navbar-expand-lg shadow-sm"
       style={{
         background: "linear-gradient(90deg, #f8fbff, #e3f2fd)",
-        padding: "12px 20px",
+        padding: "8px 20px",
       }}
     >
       <div className="container-fluid">
@@ -21,7 +21,7 @@ export default function Navbar() {
             src={logo}
             alt="HSBC Logo"
             style={{
-              height: "50px",
+              height: "40px",
               width: "auto",
               objectFit: "contain",
             }}

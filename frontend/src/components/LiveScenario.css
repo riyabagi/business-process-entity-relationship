@@ -134,49 +134,12 @@
 .dashboard {
   padding: 24px 32px;
 }
-
-/* STATUS CARDS */
-.status-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-  margin-bottom: 28px;
-}
-
-.status-card {
-  background: white;
-  border-radius: 12px;
-  padding: 20px 24px;
-  border-left: 6px solid #22c55e;
-}
-
-.status-label {
-  font-size: 13px;
-  color: #64748b;
-  font-weight: 600;
-}
-
-.status-value {
-  font-size: 22px;
-  font-weight: 700;
-}
-
-.status-value.green {
-  color: #16a34a;
-}
-
-/* MAIN GRID */
 .live-grid {
   display: grid;
-  grid-template-columns: 1.2fr 3fr;
+  grid-template-columns: 350px 1fr;
   gap: 32px;
 }
 
-.right-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
 
 /* ================= TOP STATUS CARDS ================= */
 
@@ -191,12 +154,13 @@
   position: relative;
   background: #ffffff;
   border-radius: 12px;
-  padding: 24px 28px 24px 32px;
+  padding: 15px 15px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
-  min-height: 110px;
+  height: 80px;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  border: 1px solid #e5e7eb;
 }
 
 /* Green vertical bar */
@@ -204,9 +168,9 @@
   content: "";
   position: absolute;
   left: 0;
-  top: 16px;
-  bottom: 16px;
-  width: 6px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
   background: #22c55e;
   border-radius: 6px;
 }
@@ -220,8 +184,8 @@
 }
 
 .status-value {
-  font-size: 26px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 500;
   color: #0f172a;
 }
 

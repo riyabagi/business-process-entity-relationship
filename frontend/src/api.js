@@ -7,6 +7,18 @@ export const getServers = async () => {
   return res.data;
 };
 
+/**
+ * NEW: Unified endpoint for complete impact analysis
+ * Returns all metrics in one call instead of multiple API calls
+ */
+export const simulate = async (server) => {
+  const res = await axios.get(`${API}/simulate`, {
+    params: { server }
+  });
+  return res.data;
+};
+
+// Legacy endpoints kept for backward compatibility
 export const getImpact = async (server) => {
   const res = await axios.get(`${API}/impact/${server}`);
   return res.data;
@@ -39,3 +51,4 @@ export async function getAISummary(server, applications, processes) {
 
   return res.json();
 }
+

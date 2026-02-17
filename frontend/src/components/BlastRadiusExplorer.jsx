@@ -220,7 +220,7 @@ export default function BlastRadiusExplorer() {
         {/* Infrastructure */}
         <div className="col-md-3">
           <div className="card p-3 shadow-sm h-100">
-            <h5>1 Infrastructure</h5>
+            <h5>Infrastructure</h5>
             <select
               className="form-select my-2"
               value={selectedServer}
@@ -258,9 +258,11 @@ export default function BlastRadiusExplorer() {
         {/* Applications */}
         <div className="col-md-3">
           <div className="card p-3 shadow-sm border-danger h-100">
-            <h5>2 Applications</h5>
+            <h5>Applications ({apps.length})</h5>
+
             <div style={{ maxHeight: "200px", overflowY: "auto" }}>
-              {apps.length === 0 && <p className="text-muted">No data</p>}
+              {apps.length === 0 && <p className="text-muted">No impacted applications</p>}
+
               {apps.map((a, i) => (
                 <div key={i} className="alert alert-danger p-2 my-1">
                   {a}
@@ -273,9 +275,11 @@ export default function BlastRadiusExplorer() {
         {/* Processes */}
         <div className="col-md-3">
           <div className="card p-3 shadow-sm border-primary h-100">
-            <h5>3 Processes</h5>
-            <div className="scrollable-list">
-              {processes.length === 0 && <p className="text-muted">No data</p>}
+            <h5>Processes ({processes.length})</h5>
+
+            <div style={{ maxHeight: "200px", overflowY: "auto" }}>
+              {processes.length === 0 && <p className="text-muted">No impacted processes</p>}
+
               {processes.map((p, i) => (
                 <div key={i} className="alert alert-primary p-2 my-1">
                   {p}
@@ -288,9 +292,11 @@ export default function BlastRadiusExplorer() {
         {/* Business Services */}
         <div className="col-md-3">
           <div className="card p-3 shadow-sm border-warning h-100">
-            <h5>4 Business Services</h5>
+            <h5>Business Services ({services.length})</h5>
+
             <div style={{ maxHeight: "200px", overflowY: "auto" }}>
-              {services.length === 0 && <p className="text-muted">No data</p>}
+              {services.length === 0 && <p className="text-muted">No impacted services</p>}
+
               {services.map((s, i) => (
                 <div key={i} className="alert alert-warning p-2 my-1">
                   {s}

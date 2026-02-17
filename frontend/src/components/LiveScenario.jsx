@@ -123,26 +123,27 @@ function LiveTimeline({
       action: onTriggerEvent,
       id: "trigger",
     },
-    {
+   {
       time: "14:05 GMT",
       title: "Services Detect Failure",
       text: "Applications lose connectivity.",
+     /* id: "propagation",
       button: "View Propagation",
       action: onViewPropagation,
       secondary: true,
       id: "propagation",
-      disabled: !isSimulationActive,
+      disabled: !isSimulationActive,*/
     },
     {
       time: "14:15 GMT",
       title: "Impact Analysis Complete",
       text: "Full cascade impact calculated.",
-      button: "Calculate Impact",
+     /* button: "Calculate Impact",
       action: onCalculateImpact,
       secondary: true,
       last: true,
       id: "impact",
-      disabled: !isSimulationActive,
+      disabled: !isSimulationActive,*/
     },
   ];
 
@@ -165,8 +166,8 @@ function LiveTimeline({
             title={event.title}
             text={event.text}
             button={event.button}
-            secondary={event.secondary}
-            last={event.last}
+            /*secondary={event.secondary}
+            last={event.last}*/
             onClick={event.action}
             isActive={isSimulationActive}
             isLoading={loading}
@@ -175,16 +176,7 @@ function LiveTimeline({
         ))}
       </div>
 
-      {propagationData && propagationData.length > 0 && (
-        <div className="propagation-info">
-          <h5>Propagation Chain:</h5>
-          <ul>
-            {propagationData.map((item, idx) => (
-              <li key={idx}>{item}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+      
 
       <button
         className="reset-btn"
@@ -221,15 +213,17 @@ function TimelineItem({
         <div className="timeline-heading">{title}</div>
         <div className="timeline-text">{text}</div>
 
+         {button && (
         <button
-          className={`timeline-btn ${secondary ? "secondary" : ""} ${
-            isLoading ? "loading" : ""
+         className={`timeline-btn ${secondary ? "secondary" : ""} ${
+          isLoading ? "loading" : ""
           }`}
           onClick={onClick}
           disabled={isLoading || disabled}
-        >
-          {isLoading ? "Loading..." : button}
-        </button>
+          >
+           {isLoading ? "Loading..." : button}
+            </button>
+           )}
       </div>
     </div>
   );

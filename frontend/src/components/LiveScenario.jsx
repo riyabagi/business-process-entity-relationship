@@ -104,48 +104,46 @@ function IBSServiceTable({ affectedServices, isSimulationActive }) {
 /* -------------------- LIVE TIMELINE -------------------- */
 function LiveTimeline({
   onTriggerEvent,
-  onViewPropagation,
-  onCalculateImpact,
   onResetSimulation,
   propagationData,
   isSimulationActive,
   loading,
   failedServer,
 }) {
-  const timelineEvents = [
-    {
-      time: "14:00 GMT",
-      title: failedServer
-        ? `Infrastructure Failure (${failedServer})`
-        : "Oracle RAC Node 1 (uk-lon-db-01)",
-      text: failedServer ? "Database failure detected" : "Storage Controller Failure.",
-      button: "Trigger Event",
-      action: onTriggerEvent,
-      id: "trigger",
-    },
-   {
-      time: "14:05 GMT",
-      title: "Services Detect Failure",
-      text: "Applications lose connectivity.",
-     /* id: "propagation",
-      button: "View Propagation",
-      action: onViewPropagation,
-      secondary: true,
-      id: "propagation",
-      disabled: !isSimulationActive,*/
-    },
-    {
-      time: "14:15 GMT",
-      title: "Impact Analysis Complete",
-      text: "Full cascade impact calculated.",
-     /* button: "Calculate Impact",
-      action: onCalculateImpact,
-      secondary: true,
-      last: true,
-      id: "impact",
-      disabled: !isSimulationActive,*/
-    },
-  ];
+  const [activeStep, setActiveStep] = useState(0);
+  const [baseTime, setBaseTime] = useState(null);
+
+  const formatTime = (date) => {
+    return date.toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    }) + " GMT";
+  };
+
+  const startSimulation = () => {
+    if (isSimulationActive) return;
+
+    const now = new Date();
+    setBaseTime(now);
+    setActiveStep(1);
+
+    onTriggerEvent();
+
+    setTimeout(() => {
+      setActiveStep(2);
+    }, 5000);
+
+    setTimeout(() => {
+      setActiveStep(3);
+    }, 10000);
+  };
+
+  const getTime = (offset) => {
+    if (!baseTime) return "--:--:-- GMT";
+    const newTime = new Date(baseTime.getTime() + offset * 1000);
+    return formatTime(newTime);
+  };
 
   return (
     <div className="timeline-card">
@@ -159,29 +157,54 @@ function LiveTimeline({
       </p>
 
       <div className="timeline">
-        {timelineEvents.map((event) => (
-          <TimelineItem
-            key={event.id}
-            time={event.time}
-            title={event.title}
-            text={event.text}
-            button={event.button}
-            /*secondary={event.secondary}
-            last={event.last}*/
-            onClick={event.action}
-            isActive={isSimulationActive}
-            isLoading={loading}
-            disabled={event.disabled}
-          />
-        ))}
+        <TimelineItem
+          time={activeStep >= 1 ? getTime(0) : "--:--:-- GMT"}
+          title={`Infrastructure Failure (${failedServer})`}
+          text="Database failure detected"
+          isActive={activeStep >= 1}
+        />
+
+        <TimelineItem
+          time={activeStep >= 2 ? getTime(5) : "--:--:-- GMT"}
+          title="Services Detect Failure"
+          text="Applications lose connectivity."
+          isActive={activeStep >= 2}
+        />
+
+        <TimelineItem
+          time={activeStep >= 3 ? getTime(10) : "--:--:-- GMT"}
+          title="Impact Analysis Complete"
+          text="Full cascade impact calculated."
+          isActive={activeStep >= 3}
+          last
+        />
       </div>
 
-      
+      {/* ✅ PROPAGATION CHAIN RESTORED */}
+      {activeStep >= 2 && propagationData && propagationData.length > 0 && (
+        <div className="propagation-info fade-in">
+          <h5>Propagation Chain:</h5>
+          <ul>
+            {propagationData.map((item, idx) => (
+              <li key={idx}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {!isSimulationActive && (
+        <button
+          className="timeline-btn"
+          onClick={startSimulation}
+          disabled={loading}
+        >
+          {loading ? "Loading..." : "Trigger Event"}
+        </button>
+      )}
 
       <button
         className="reset-btn"
         onClick={onResetSimulation}
-        disabled={!isSimulationActive && (!propagationData || propagationData.length === 0)}
       >
         Reset Simulation
       </button>
@@ -193,16 +216,11 @@ function TimelineItem({
   time,
   title,
   text,
-  button,
-  secondary,
-  last,
-  onClick,
   isActive,
-  isLoading,
-  disabled,
+  last,
 }) {
   return (
-    <div className="timeline-item">
+    <div className={`timeline-item ${isActive ? "fade-in" : "inactive"}`}>
       <div className="timeline-left">
         <div className={`timeline-dot ${isActive ? "active" : ""}`} />
         {!last && <div className="timeline-line" />}
@@ -212,18 +230,6 @@ function TimelineItem({
         <div className="timeline-time">{time}</div>
         <div className="timeline-heading">{title}</div>
         <div className="timeline-text">{text}</div>
-
-         {button && (
-        <button
-         className={`timeline-btn ${secondary ? "secondary" : ""} ${
-          isLoading ? "loading" : ""
-          }`}
-          onClick={onClick}
-          disabled={isLoading || disabled}
-          >
-           {isLoading ? "Loading..." : button}
-            </button>
-           )}
       </div>
     </div>
   );
@@ -265,7 +271,6 @@ export default function Dashboard() {
   const [affectedServices, setAffectedServices] = useState([]);
   const [servers, setServers] = useState([]);
   const [selectedServer, setSelectedServer] = useState("uk-lon-db-01");
-
   const [financialRisk, setFinancialRisk] = useState(0);
   const [systemStatus, setSystemStatus] = useState("OPERATIONAL");
   const [regImpact, setRegImpact] = useState("NONE");

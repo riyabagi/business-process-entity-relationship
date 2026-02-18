@@ -26,3 +26,5 @@ dist-ssr
 backend/data/*.csv
 __pycache__/
 *.pyc
+# Python virtual environment
+backend/venv/

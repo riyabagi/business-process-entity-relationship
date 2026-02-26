@@ -4,3 +4,4 @@ neo4j
 python-dotenv
 pandas
 python-multipart
+ollama
